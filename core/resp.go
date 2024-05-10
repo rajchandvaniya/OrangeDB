@@ -1,6 +1,25 @@
 package core
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
+
+func Encode(value interface{}, isSimple bool) []byte {
+	switch typ := value.(type) {
+	case string:
+		if isSimple {
+			return []byte(fmt.Sprintf("+%s\r\n", typ))
+		} else {
+			return []byte(fmt.Sprintf("$%d\r\n%s\r\n", len(typ), typ))
+		}
+	}
+	return nil
+}
+
+func EncodeError(err error) []byte {
+	return []byte(fmt.Sprintf("-%s\r\n", err))
+}
 
 func Decode(data []byte) (interface{}, error) {
 	if len(data) == 0 {

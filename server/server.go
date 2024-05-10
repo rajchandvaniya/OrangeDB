@@ -5,8 +5,10 @@ import (
 	"log"
 	"net"
 	"strconv"
+	"strings"
 
 	"github.com/rajchandvaniya/orangedb/config"
+	"github.com/rajchandvaniya/orangedb/core"
 )
 
 func StartEchoTCPServer() {
@@ -39,25 +41,30 @@ func StartEchoTCPServer() {
 				log.Println("error:", err)
 			}
 			log.Println("received command:", cmd)
-			err = writeCommand(c, cmd)
-			if err != nil {
-				log.Println("error while write:", err)
-			}
+			respond(cmd, c)
 		}
 	}
 
 }
 
-func readCommand(con net.Conn) (string, error) {
+func readCommand(con net.Conn) (*core.RedisCmd, error) {
 	buffer := make([]byte, 512)
 	n, err := con.Read(buffer[:])
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(buffer[:n]), nil
+	cmds, err := core.Decode(buffer[:n])
+	tokens := cmds.([]interface{})
+	if err != nil {
+		return nil, err
+	}
+	return &core.RedisCmd{Cmd: strings.ToUpper(tokens[0].(string)), Args: tokens[1:]}, nil
 }
 
-func writeCommand(con net.Conn, cmd string) error {
-	_, err := con.Write([]byte(cmd))
-	return err
+func respond(cmd *core.RedisCmd, con net.Conn) {
+	response, err := core.Eval(cmd)
+	if err != nil {
+		con.Write(core.EncodeError(err))
+	}
+	con.Write(response)
 }
