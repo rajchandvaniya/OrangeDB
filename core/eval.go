@@ -2,7 +2,6 @@ package core
 
 import (
 	"errors"
-	"log"
 )
 
 func evalPING(cmd *RedisCmd) ([]byte, error) {
@@ -18,7 +17,6 @@ func evalPING(cmd *RedisCmd) ([]byte, error) {
 }
 
 func Eval(cmd *RedisCmd) ([]byte, error) {
-	log.Println("evaluating command: ", cmd)
 	switch cmd.Cmd {
 	case "PING":
 		return evalPING(cmd)
