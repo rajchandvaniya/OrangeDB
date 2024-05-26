@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+const RESP_NIL = "$-1\r\n"
+
 func Encode(value interface{}, isSimple bool) []byte {
 	switch typ := value.(type) {
 	case string:
@@ -13,8 +15,11 @@ func Encode(value interface{}, isSimple bool) []byte {
 		} else {
 			return []byte(fmt.Sprintf("$%d\r\n%s\r\n", len(typ), typ))
 		}
+	case int64:
+		return []byte(fmt.Sprintf(":%v\r\n", typ))
+	default:
+		return []byte(RESP_NIL)
 	}
-	return nil
 }
 
 func EncodeError(err error) []byte {
